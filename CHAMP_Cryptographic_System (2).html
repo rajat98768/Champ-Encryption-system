@@ -1,0 +1,1264 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHAMP — Hybrid Cryptographic System</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&amp;family=Rajdhani:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#090b0f;--surface:#0d1117;--panel:#111820;
+  --border:#1e2d3d;--border2:#2a3f55;
+  --accent:#00d4ff;--accent2:#00ff9d;--accent3:#ff6b35;--accent4:#c084fc;--accent5:#fbbf24;
+  --text:#c9d8e8;--text-dim:#5a7a90;--text-mute:#2e4557;
+  --font-mono:'Share Tech Mono',monospace;--font-ui:'Rajdhani',sans-serif;
+}
+html,body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03)1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07)2px,rgba(0,0,0,0.07)4px);pointer-events:none;z-index:0;}
+.wrapper{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:2rem 1.5rem 5rem;}
+
+/* HEADER */
+header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.logo{font-family:var(--font-mono);font-size:2.2rem;color:var(--accent);letter-spacing:.15em;line-height:1;text-shadow:0 0 20px rgba(0,212,255,.4);animation:flicker 6s infinite;}
+.logo span{color:var(--accent2);}
+@keyframes flicker{0%,94%,96%,100%{opacity:1;}95%{opacity:.7;}}
+.subtitle{font-family:var(--font-mono);font-size:.7rem;color:var(--text-dim);letter-spacing:.12em;text-transform:uppercase;margin-top:4px;}
+.meta-block{text-align:right;font-family:var(--font-mono);font-size:.68rem;color:var(--text-dim);line-height:1.9;}
+.meta-block .subject{color:var(--accent);font-size:.7rem;}
+
+/* STATUS BAR */
+.statusbar{display:flex;align-items:center;gap:1.5rem;margin-bottom:1.5rem;font-family:var(--font-mono);font-size:.7rem;color:var(--text-dim);flex-wrap:wrap;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--accent2);box-shadow:0 0 8px var(--accent2);animation:pulse 2s ease-in-out infinite;display:inline-block;margin-right:5px;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* LEVEL BADGES */
+.level-badge{display:inline-block;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:2px;border:1px solid;}
+.level-low{color:#00ff9d;border-color:#00ff9d;background:rgba(0,255,157,.07);}
+.level-mid{color:#00d4ff;border-color:#00d4ff;background:rgba(0,212,255,.07);}
+.level-high{color:#ff6b35;border-color:#ff6b35;background:rgba(255,107,53,.08);}
+.level-ultra{color:#c084fc;border-color:#c084fc;background:rgba(192,132,252,.07);}
+
+/* ALGO SELECTOR */
+.algo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.8rem;margin-bottom:1.5rem;}
+.algo-card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:.9rem 1rem;cursor:pointer;transition:border-color .2s,background .2s;position:relative;}
+.algo-card:hover{border-color:var(--border2);background:#141e28;}
+.algo-card.selected{border-color:var(--accent)!important;background:rgba(0,212,255,.06);}
+.algo-card.selected::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);border-radius:4px 4px 0 0;}
+.algo-card-name{font-family:var(--font-mono);font-size:.78rem;color:var(--text);margin-bottom:.35rem;letter-spacing:.05em;}
+.algo-card-desc{font-size:.75rem;color:var(--text-dim);line-height:1.5;}
+.algo-card-badge{margin-bottom:.4rem;}
+
+/* TABS */
+.tabs{display:flex;gap:0;margin-bottom:1.5rem;border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab-btn{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1.2rem;background:transparent;border:none;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;white-space:nowrap;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;animation:fadein .3s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* LAYOUT */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+@media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+
+/* PANEL */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:1.3rem;position:relative;margin-bottom:1rem;}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.35;}
+.panel-label{font-family:var(--font-mono);font-size:.63rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.panel-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* FORM */
+.field{margin-bottom:1rem;}
+.field label{display:block;font-family:var(--font-mono);font-size:.61rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:.4rem;}
+.field textarea,.field input[type="text"],.field input[type="number"],.field select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--font-mono);font-size:.84rem;padding:.6rem .8rem;outline:none;resize:vertical;transition:border-color .2s;}
+.field textarea:focus,.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,212,255,.07);}
+.field textarea{min-height:88px;}
+.field select{cursor:pointer;}
+.field select option{background:var(--surface);}
+
+/* BUTTONS */
+.btn{font-family:var(--font-mono);font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;padding:.6rem 1.3rem;border:1px solid;border-radius:3px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;}
+.btn-primary{background:rgba(0,212,255,.07);border-color:var(--accent);color:var(--accent);}
+.btn-primary:hover{background:rgba(0,212,255,.18);box-shadow:0 0 14px rgba(0,212,255,.25);}
+.btn-green{background:rgba(0,255,157,.06);border-color:var(--accent2);color:var(--accent2);}
+.btn-green:hover{background:rgba(0,255,157,.15);box-shadow:0 0 14px rgba(0,255,157,.2);}
+.btn-orange{background:rgba(255,107,53,.06);border-color:var(--accent3);color:var(--accent3);}
+.btn-orange:hover{background:rgba(255,107,53,.15);}
+.btn-purple{background:rgba(192,132,252,.06);border-color:var(--accent4);color:var(--accent4);}
+.btn-purple:hover{background:rgba(192,132,252,.15);}
+.btn-yellow{background:rgba(251,191,36,.06);border-color:var(--accent5);color:var(--accent5);}
+.btn-yellow:hover{background:rgba(251,191,36,.15);}
+.btn:active{transform:scale(.97);}
+.btn-row{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.5rem;}
+
+/* OUTPUT */
+.output-block{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:.9rem;font-family:var(--font-mono);font-size:.82rem;color:var(--accent2);min-height:56px;word-break:break-all;line-height:1.7;position:relative;}
+.output-block.error{color:var(--accent3);}
+.copy-btn{position:absolute;top:6px;right:8px;background:transparent;border:1px solid var(--border2);border-radius:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:.58rem;padding:2px 7px;cursor:pointer;letter-spacing:.1em;transition:all .15s;}
+.copy-btn:hover{color:var(--accent);border-color:var(--accent);}
+
+/* TRACE */
+.trace{margin-top:1rem;border:1px solid var(--border);border-radius:3px;overflow:hidden;}
+.trace-header{background:rgba(0,212,255,.05);padding:.5rem .9rem;font-family:var(--font-mono);font-size:.61rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid var(--border);}
+.trace-row{display:flex;gap:1rem;padding:.55rem .9rem;border-bottom:1px solid var(--border);align-items:flex-start;}
+.trace-row:last-child{border-bottom:none;}
+.trace-num{font-family:var(--font-mono);font-size:.63rem;color:var(--text-mute);min-width:22px;padding-top:2px;}
+.trace-label{font-family:var(--font-mono);font-size:.68rem;color:var(--text-dim);min-width:170px;}
+.trace-val{font-family:var(--font-mono);font-size:.78rem;color:var(--text);word-break:break-all;line-height:1.6;}
+
+/* POLYBIUS */
+.matrix-wrap{overflow-x:auto;margin-top:.5rem;}
+.polybius-grid{border-collapse:collapse;font-family:var(--font-mono);font-size:.8rem;}
+.polybius-grid th,.polybius-grid td{width:46px;height:46px;text-align:center;border:1px solid var(--border);}
+.polybius-grid th{background:rgba(0,212,255,.05);color:var(--accent);font-size:.65rem;letter-spacing:.1em;}
+.polybius-grid td{background:var(--surface);color:var(--text);cursor:pointer;transition:background .15s,color .15s;}
+.polybius-grid td:hover{background:rgba(0,212,255,.12);color:var(--accent);}
+.polybius-grid td.lit{background:rgba(0,255,157,.15);color:var(--accent2);border-color:var(--accent2);}
+.coord-display{margin-top:.8rem;font-family:var(--font-mono);font-size:.76rem;color:var(--text-dim);padding:.6rem .9rem;background:var(--surface);border:1px solid var(--border);border-radius:3px;min-height:36px;}
+
+/* FREQ */
+.freq-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.freq-chr{font-family:var(--font-mono);font-size:.7rem;color:var(--text-dim);width:14px;text-align:center;}
+.freq-track{flex:1;height:10px;background:var(--border);border-radius:2px;overflow:hidden;}
+.freq-fill{height:100%;border-radius:2px;transition:width .4s ease;}
+.freq-fill.c1{background:var(--accent);}
+.freq-fill.c2{background:var(--accent2);}
+.freq-pct{font-family:var(--font-mono);font-size:.6rem;color:var(--text-mute);width:34px;text-align:right;}
+.ic-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.4rem;background:var(--surface);border:1px solid var(--border);border-radius:3px;text-align:center;gap:.4rem;}
+.ic-val{font-family:var(--font-mono);font-size:1.9rem;color:var(--accent);letter-spacing:.06em;}
+.ic-label{font-family:var(--font-mono);font-size:.6rem;color:var(--text-dim);letter-spacing:.12em;text-transform:uppercase;}
+.ic-ref{font-family:var(--font-mono);font-size:.6rem;color:var(--text-mute);margin-top:.2rem;}
+
+/* ABOUT */
+.pipeline{display:flex;align-items:stretch;gap:0;margin:1.2rem 0;flex-wrap:wrap;}
+.pipe-box{border:1px solid var(--border);border-radius:3px;padding:.9rem 1rem;background:var(--surface);flex:1;min-width:140px;}
+.pipe-box h3{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem;}
+.pipe-box h3.v{color:var(--accent);}
+.pipe-box h3.p{color:var(--accent2);}
+.pipe-box h3.d{color:var(--accent3);}
+.pipe-arrow{font-family:var(--font-mono);font-size:1.2rem;color:var(--text-mute);padding:0 .4rem;flex-shrink:0;display:flex;align-items:center;}
+.pipe-box p{font-size:.78rem;color:var(--text-dim);line-height:1.55;}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1.2rem;}
+.info-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:1rem;}
+.info-card h4{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem;}
+.info-card p{font-size:.8rem;color:var(--text-dim);line-height:1.6;}
+
+/* TIMELINE */
+.timeline{margin-top:.8rem;}
+.tl-row{display:flex;gap:1rem;padding:.8rem 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.tl-row:last-child{border-bottom:none;}
+.tl-phase{font-family:var(--font-mono);font-size:.63rem;color:var(--accent);min-width:65px;letter-spacing:.07em;}
+.tl-week{font-family:var(--font-mono);font-size:.63rem;color:var(--text-mute);min-width:55px;}
+.tl-desc{font-size:.82rem;color:var(--text-dim);line-height:1.5;flex:1;}
+.tl-bar{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.tl-bar.done{background:var(--accent2);box-shadow:0 0 6px var(--accent2);}
+.tl-bar.active{background:var(--accent);box-shadow:0 0 6px var(--accent);animation:pulse 2s infinite;}
+.tl-bar.todo{background:var(--text-mute);}
+
+/* ALGO LEVELS SECTION */
+.levels-section{margin-bottom:1.5rem;}
+.level-row{margin-bottom:1rem;}
+.level-heading{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;padding:.4rem .8rem;border-left:3px solid;margin-bottom:.6rem;}
+.level-heading.low{color:var(--accent2);border-color:var(--accent2);background:rgba(0,255,157,.04);}
+.level-heading.mid{color:var(--accent);border-color:var(--accent);background:rgba(0,212,255,.04);}
+.level-heading.high{color:var(--accent3);border-color:var(--accent3);background:rgba(255,107,53,.05);}
+.level-heading.ultra{color:var(--accent4);border-color:var(--accent4);background:rgba(192,132,252,.05);}
+
+/* NOTIF */
+.notif{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--panel);border:1px solid var(--accent2);border-radius:3px;padding:.6rem 1.2rem;font-family:var(--font-mono);font-size:.7rem;color:var(--accent2);z-index:999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
+.notif.show{opacity:1;transform:none;}
+
+/* DOWNLOAD BTN special */
+.btn-download{background:rgba(251,191,36,.06);border-color:var(--accent5);color:var(--accent5);font-size:.76rem;}
+.btn-download:hover{background:rgba(251,191,36,.18);box-shadow:0 0 14px rgba(251,191,36,.25);}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="logo">CH<span>A</span>MP</div>
+    <div class="subtitle">Hybrid Cryptographic System // Multi-Level Algorithm Suite</div>
+  </div>
+  <div class="meta-block">
+    <div class="subject">Cryptography &amp; Network Security</div>
+    <div>Rajat · 23BAI1161</div>
+    <div>Team Member · 23BAI1574</div>
+    <div style="margin-top:.5rem;">
+      <button class="btn btn-download" onclick="downloadSelf()">⬇ DOWNLOAD THIS FILE</button>
+    </div>
+  </div>
+</header>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <span><span class="status-dot"></span>System Online</span>
+  <span>// 12 Algorithms Loaded</span>
+  <span id="clock">00:48:11</span>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('encrypt')">⬡ Encrypt</button>
+  <button class="tab-btn" onclick="switchTab('decrypt')">⬡ Decrypt</button>
+  <button class="tab-btn" onclick="switchTab('matrix')">⬡ Polybius Matrix</button>
+  <button class="tab-btn" onclick="switchTab('analysis')">⬡ Freq Analysis</button>
+  <button class="tab-btn" onclick="switchTab('compare')">⬡ Compare Algos</button>
+  <button class="tab-btn" onclick="switchTab('about')">⬡ About</button>
+</div>
+
+<!-- ============ ENCRYPT ============ -->
+<div class="tab-pane active" id="tab-encrypt">
+  <div class="levels-section">
+    <div class="level-row">
+      <div class="level-heading low">⬡ Low Level — Classical Ciphers</div>
+      <div class="algo-grid" id="algo-grid-low"><div class="algo-card" onclick="selectAlgo('caesar','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-low">low</span></div>
+        <div class="algo-card-name">Caesar Cipher</div>
+        <div class="algo-card-desc">Shift each letter by fixed offset N (default 3)</div>
+      </div><div class="algo-card" onclick="selectAlgo('rot13','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-low">low</span></div>
+        <div class="algo-card-name">ROT-13</div>
+        <div class="algo-card-desc">Fixed Caesar shift of 13. Self-inverse.</div>
+      </div><div class="algo-card" onclick="selectAlgo('atbash','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-low">low</span></div>
+        <div class="algo-card-name">Atbash Cipher</div>
+        <div class="algo-card-desc">A↔Z, B↔Y mirror substitution.</div>
+      </div><div class="algo-card" onclick="selectAlgo('vigenere','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-low">low</span></div>
+        <div class="algo-card-name">Vigenère Cipher</div>
+        <div class="algo-card-desc">Polyalphabetic keyword substitution.</div>
+      </div><div class="algo-card" onclick="selectAlgo('polybius','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-low">low</span></div>
+        <div class="algo-card-name">Polybius Square</div>
+        <div class="algo-card-desc">Each letter → 2-digit row/col coordinate.</div>
+      </div></div>
+    </div>
+    <div class="level-row">
+      <div class="level-heading mid">⬡ Mid Level — Symmetric / Hybrid</div>
+      <div class="algo-grid" id="algo-grid-mid"><div class="algo-card" onclick="selectAlgo('railfence','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-mid">mid</span></div>
+        <div class="algo-card-name">Rail Fence</div>
+        <div class="algo-card-desc">Zigzag transposition across N rails.</div>
+      </div><div class="algo-card" onclick="selectAlgo('columnar','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-mid">mid</span></div>
+        <div class="algo-card-name">Columnar Transposition</div>
+        <div class="algo-card-desc">Reorder columns by alphabetic key order.</div>
+      </div><div class="algo-card" onclick="selectAlgo('playfair','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-mid">mid</span></div>
+        <div class="algo-card-name">Playfair Cipher</div>
+        <div class="algo-card-desc">Digraph substitution using a 5×5 key square.</div>
+      </div></div>
+    </div>
+    <div class="level-row">
+      <div class="level-heading high">⬡ High Level — Modern Primitives</div>
+      <div class="algo-grid" id="algo-grid-high"><div class="algo-card" onclick="selectAlgo('xor','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-high">high</span></div>
+        <div class="algo-card-name">XOR Stream Cipher</div>
+        <div class="algo-card-desc">XOR each byte with a PRNG keystream seeded by key.</div>
+      </div><div class="algo-card" onclick="selectAlgo('feistel','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-high">high</span></div>
+        <div class="algo-card-name">Feistel Network</div>
+        <div class="algo-card-desc">4-round simplified Feistel block cipher.</div>
+      </div><div class="algo-card" onclick="selectAlgo('rc4like','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-high">high</span></div>
+        <div class="algo-card-name">RC4-Style PRNG</div>
+        <div class="algo-card-desc">Key-Scheduling Algorithm + PRNG XOR stream.</div>
+      </div></div>
+    </div>
+    <div class="level-row">
+      <div class="level-heading ultra">⬡ Ultra — CHAMP Hybrid Stack</div>
+      <div class="algo-grid" id="algo-grid-ultra"><div class="algo-card selected" onclick="selectAlgo('champ','enc')">
+        <div class="algo-card-badge"><span class="level-badge level-ultra">ultra</span></div>
+        <div class="algo-card-name">CHAMP Hybrid Stack</div>
+        <div class="algo-card-desc">Vigenère → Polybius → XOR. Full 3-layer product cipher.</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="panel">
+        <div class="panel-label">Input</div>
+        <div class="field">
+          <label>Plaintext Message</label>
+          <textarea id="enc-plain" placeholder="Enter your message...">ATTACK AT DAWN</textarea>
+        </div>
+        <div id="enc-key-fields">
+    <div class="field">
+      <label>Vigenère Key</label>
+      <input type="text" id="kf_enc_cvkey" value="SECRET" placeholder="Vigenère Key">
+    </div>
+    <div class="field">
+      <label>Polybius Keyword (optional)</label>
+      <input type="text" id="kf_enc_cpkey" value="" placeholder="Polybius Keyword (optional)">
+    </div>
+    <div class="field">
+      <label>XOR Key</label>
+      <input type="text" id="kf_enc_cxkey" value="CHAMP" placeholder="XOR Key">
+    </div></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="runEncrypt()">▶ ENCRYPT</button>
+          <button class="btn btn-orange" onclick="clearEnc()">✕ CLEAR</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-label">Output</div>
+        <div class="field">
+          <label>Ciphertext</label>
+          <div class="output-block">
+            <button class="copy-btn" onclick="copyEl('enc-out-text')">COPY</button>
+            <span id="enc-out-text">777c747e657279707f65717a617964767b617f647279707f6276</span>
+          </div>
+        </div>
+      </div>
+      <div class="trace" id="enc-trace" style="display: block;">
+        <div class="trace-header">// Process Trace</div>
+        <div id="enc-trace-rows">
+        <div class="trace-row">
+          <span class="trace-num">01</span>
+          <span class="trace-label">Plaintext</span>
+          <span class="trace-val">ATTACK AT DAWN</span>
+        </div>
+        <div class="trace-row">
+          <span class="trace-num">02</span>
+          <span class="trace-label">After Vigenère (key: SECRET)</span>
+          <span class="trace-val">SXVRGD SX FRAG</span>
+        </div>
+        <div class="trace-row">
+          <span class="trace-num">03</span>
+          <span class="trace-label">After Polybius Fractionation</span>
+          <span class="trace-val">445351112522 4453 24111225</span>
+        </div>
+        <div class="trace-row">
+          <span class="trace-num">04</span>
+          <span class="trace-label">After XOR Stream (key: CHAMP)</span>
+          <span class="trace-val">777c747e657279707f65717a617964767b617f647279707f6276</span>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DECRYPT ============ -->
+<div class="tab-pane" id="tab-decrypt">
+  <div class="levels-section">
+    <div class="level-row">
+      <div class="level-heading low">⬡ Low Level — Classical</div>
+      <div class="algo-grid" id="dalgo-grid-low"><div class="algo-card" onclick="selectAlgo('caesar','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-low">low</span></div>
+        <div class="algo-card-name">Caesar Cipher</div>
+        <div class="algo-card-desc">Shift each letter by fixed offset N (default 3)</div>
+      </div><div class="algo-card" onclick="selectAlgo('rot13','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-low">low</span></div>
+        <div class="algo-card-name">ROT-13</div>
+        <div class="algo-card-desc">Fixed Caesar shift of 13. Self-inverse.</div>
+      </div><div class="algo-card" onclick="selectAlgo('atbash','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-low">low</span></div>
+        <div class="algo-card-name">Atbash Cipher</div>
+        <div class="algo-card-desc">A↔Z, B↔Y mirror substitution.</div>
+      </div><div class="algo-card" onclick="selectAlgo('vigenere','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-low">low</span></div>
+        <div class="algo-card-name">Vigenère Cipher</div>
+        <div class="algo-card-desc">Polyalphabetic keyword substitution.</div>
+      </div><div class="algo-card" onclick="selectAlgo('polybius','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-low">low</span></div>
+        <div class="algo-card-name">Polybius Square</div>
+        <div class="algo-card-desc">Each letter → 2-digit row/col coordinate.</div>
+      </div></div>
+    </div>
+    <div class="level-row">
+      <div class="level-heading mid">⬡ Mid Level — Symmetric / Hybrid</div>
+      <div class="algo-grid" id="dalgo-grid-mid"><div class="algo-card" onclick="selectAlgo('railfence','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-mid">mid</span></div>
+        <div class="algo-card-name">Rail Fence</div>
+        <div class="algo-card-desc">Zigzag transposition across N rails.</div>
+      </div><div class="algo-card" onclick="selectAlgo('columnar','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-mid">mid</span></div>
+        <div class="algo-card-name">Columnar Transposition</div>
+        <div class="algo-card-desc">Reorder columns by alphabetic key order.</div>
+      </div><div class="algo-card" onclick="selectAlgo('playfair','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-mid">mid</span></div>
+        <div class="algo-card-name">Playfair Cipher</div>
+        <div class="algo-card-desc">Digraph substitution using a 5×5 key square.</div>
+      </div></div>
+    </div>
+    <div class="level-row">
+      <div class="level-heading high">⬡ High Level — Modern</div>
+      <div class="algo-grid" id="dalgo-grid-high"><div class="algo-card" onclick="selectAlgo('xor','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-high">high</span></div>
+        <div class="algo-card-name">XOR Stream Cipher</div>
+        <div class="algo-card-desc">XOR each byte with a PRNG keystream seeded by key.</div>
+      </div><div class="algo-card" onclick="selectAlgo('feistel','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-high">high</span></div>
+        <div class="algo-card-name">Feistel Network</div>
+        <div class="algo-card-desc">4-round simplified Feistel block cipher.</div>
+      </div><div class="algo-card" onclick="selectAlgo('rc4like','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-high">high</span></div>
+        <div class="algo-card-name">RC4-Style PRNG</div>
+        <div class="algo-card-desc">Key-Scheduling Algorithm + PRNG XOR stream.</div>
+      </div></div>
+    </div>
+    <div class="level-row">
+      <div class="level-heading ultra">⬡ Ultra — CHAMP Hybrid Stack</div>
+      <div class="algo-grid" id="dalgo-grid-ultra"><div class="algo-card selected" onclick="selectAlgo('champ','dec')">
+        <div class="algo-card-badge"><span class="level-badge level-ultra">ultra</span></div>
+        <div class="algo-card-name">CHAMP Hybrid Stack</div>
+        <div class="algo-card-desc">Vigenère → Polybius → XOR. Full 3-layer product cipher.</div>
+      </div></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="panel">
+        <div class="panel-label">Input</div>
+        <div class="field">
+          <label>Ciphertext</label>
+          <textarea id="dec-cipher" placeholder="Paste ciphertext here..."></textarea>
+        </div>
+        <div id="dec-key-fields">
+    <div class="field">
+      <label>Vigenère Key</label>
+      <input type="text" id="kf_dec_cvkey" value="SECRET" placeholder="Vigenère Key">
+    </div>
+    <div class="field">
+      <label>Polybius Keyword (optional)</label>
+      <input type="text" id="kf_dec_cpkey" value="" placeholder="Polybius Keyword (optional)">
+    </div>
+    <div class="field">
+      <label>XOR Key</label>
+      <input type="text" id="kf_dec_cxkey" value="CHAMP" placeholder="XOR Key">
+    </div></div>
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="runDecrypt()">◀ DECRYPT</button>
+          <button class="btn btn-orange" onclick="clearDec()">✕ CLEAR</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-label">Output</div>
+        <div class="field">
+          <label>Recovered Plaintext</label>
+          <div class="output-block">
+            <button class="copy-btn" onclick="copyEl('dec-out-text')">COPY</button>
+            <span id="dec-out-text">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="trace" id="dec-trace" style="display:none">
+        <div class="trace-header">// Decryption Trace</div>
+        <div id="dec-trace-rows"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MATRIX ============ -->
+<div class="tab-pane" id="tab-matrix">
+  <div class="two-col">
+    <div>
+      <div class="panel">
+        <div class="panel-label">Polybius Square</div>
+        <div class="field">
+          <label>Keyword (scrambles the square)</label>
+          <input type="text" id="matrix-key" placeholder="e.g. KEYWORD" oninput="renderMatrix()">
+        </div>
+        <p style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-dim);line-height:1.6;margin-bottom:1rem;">I and J share a single cell. Click any cell to inspect coordinates.</p>
+        <div class="matrix-wrap"><table class="polybius-grid" id="poly-table"><tbody><tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr><tr><th>1</th><td class="" onclick="showCoord('A',1,1)">A</td><td class="" onclick="showCoord('B',1,2)">B</td><td class="" onclick="showCoord('C',1,3)">C</td><td class="" onclick="showCoord('D',1,4)">D</td><td class="" onclick="showCoord('E',1,5)">E</td></tr><tr><th>2</th><td class="" onclick="showCoord('F',2,1)">F</td><td class="" onclick="showCoord('G',2,2)">G</td><td class="" onclick="showCoord('H',2,3)">H</td><td class="" onclick="showCoord('I',2,4)">I/J</td><td class="" onclick="showCoord('K',2,5)">K</td></tr><tr><th>3</th><td class="" onclick="showCoord('L',3,1)">L</td><td class="" onclick="showCoord('M',3,2)">M</td><td class="" onclick="showCoord('N',3,3)">N</td><td class="" onclick="showCoord('O',3,4)">O</td><td class="" onclick="showCoord('P',3,5)">P</td></tr><tr><th>4</th><td class="" onclick="showCoord('Q',4,1)">Q</td><td class="" onclick="showCoord('R',4,2)">R</td><td class="" onclick="showCoord('S',4,3)">S</td><td class="" onclick="showCoord('T',4,4)">T</td><td class="" onclick="showCoord('U',4,5)">U</td></tr><tr><th>5</th><td class="" onclick="showCoord('V',5,1)">V</td><td class="" onclick="showCoord('W',5,2)">W</td><td class="" onclick="showCoord('X',5,3)">X</td><td class="" onclick="showCoord('Y',5,4)">Y</td><td class="" onclick="showCoord('Z',5,5)">Z</td></tr></tbody></table></div>
+        <div class="coord-display" id="coord-info">Click a cell to see its row-column coordinate</div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-label">Lookup Tools</div>
+        <div class="field">
+          <label>Letter → Coordinate</label>
+          <input type="text" id="lookup-char" maxlength="1" placeholder="e.g. A" oninput="lookupChar()">
+        </div>
+        <div class="field">
+          <label>Coordinate → Letter (e.g. 25)</label>
+          <input type="text" id="lookup-coord" maxlength="2" placeholder="e.g. 25" oninput="lookupCoord()">
+        </div>
+        <div class="coord-display" id="lookup-result">—</div>
+        <div style="margin-top:1.2rem;">
+          <div class="panel-label">Quick Encode</div>
+          <div class="field">
+            <label>Word to encode via Polybius</label>
+            <input type="text" id="demo-word" placeholder="e.g. HELLO" oninput="demoEncode()">
+          </div>
+          <div class="output-block" style="margin-top:.4rem;"><span id="demo-out-text">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FREQ ANALYSIS ============ -->
+<div class="tab-pane" id="tab-analysis">
+  <div class="panel" style="margin-bottom:1.2rem;">
+    <div class="panel-label">Input Text</div>
+    <div class="field">
+      <label>Paste plaintext or ciphertext</label>
+      <textarea id="analysis-input" rows="3" placeholder="Paste any text..." oninput="runAnalysis()"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="loadExample()">⬡ LOAD EXAMPLE</button>
+      <button class="btn btn-orange" onclick="clearAnalysis()">✕ CLEAR</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;" id="freq-output"></div>
+</div>
+
+<!-- ============ COMPARE ============ -->
+<div class="tab-pane" id="tab-compare">
+  <div class="panel" style="margin-bottom:1.2rem;">
+    <div class="panel-label">Algorithm Comparison — Encrypt the Same Message</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="field">
+        <label>Plaintext</label>
+        <input type="text" id="cmp-plain" value="HELLO WORLD" oninput="runCompare()">
+      </div>
+      <div class="field">
+        <label>Key (used where applicable)</label>
+        <input type="text" id="cmp-key" value="SECRET" oninput="runCompare()">
+      </div>
+    </div>
+  </div>
+  <div id="cmp-output" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;">
+    <div class="panel" style="border-color:var(--accent2)22;">
+      <div class="panel-label" style="color:var(--accent2)">Caesar Cipher</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">Shift each letter by fixed offset N (default 3)</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent2);word-break:break-all;">KHOOR ZRUOG</div>
+    </div>
+    <div class="panel" style="border-color:var(--accent2)22;">
+      <div class="panel-label" style="color:var(--accent2)">ROT-13</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">Fixed Caesar shift of 13. Self-inverse.</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent2);word-break:break-all;">URYYB JBEYQ</div>
+    </div>
+    <div class="panel" style="border-color:var(--accent2)22;">
+      <div class="panel-label" style="color:var(--accent2)">Atbash Cipher</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">A↔Z, B↔Y mirror substitution.</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent2);word-break:break-all;">SVOOL DLIOW</div>
+    </div>
+    <div class="panel" style="border-color:var(--accent2)22;">
+      <div class="panel-label" style="color:var(--accent2)">Vigenère Cipher</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">Polyalphabetic keyword substitution.</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent2);word-break:break-all;">ZINCS PGVNU</div>
+    </div>
+    <div class="panel" style="border-color:var(--accent2)22;">
+      <div class="panel-label" style="color:var(--accent2)">Polybius Square</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">Each letter → 2-digit row/col coordinate.</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent2);word-break:break-all;">3112343442 5242143423</div>
+    </div>
+    <div class="panel" style="border-color:var(--accent)22;">
+      <div class="panel-label" style="color:var(--accent)">Rail Fence</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">Zigzag transposition across N rails.</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent);word-break:break-all;">HOREL OLLWD</div>
+    </div>
+    <div class="panel" style="border-color:var(--accent)22;">
+      <div class="panel-label" style="color:var(--accent)">Columnar Transposition</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">Reorder columns by alphabetic key order.</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent);word-break:break-all;">LREOODLLHW X</div>
+    </div>
+    <div class="panel" style="border-color:var(--accent)22;">
+      <div class="panel-label" style="color:var(--accent)">Playfair Cipher</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">Digraph substitution using a 5×5 key square.</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent);word-break:break-all;">ISKYIQEWFQKC</div>
+    </div>
+    <div class="panel" style="border-color:var(--accent3)22;">
+      <div class="panel-label" style="color:var(--accent3)">XOR Stream Cipher</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">XOR each byte with a PRNG keystream seeded by key.</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent3);word-break:break-all;">1b000f1e0a74040a111e01</div>
+    </div>
+    <div class="panel" style="border-color:var(--accent3)22;">
+      <div class="panel-label" style="color:var(--accent3)">Feistel Network</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">4-round simplified Feistel block cipher.</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent3);word-break:break-all;">e8dbb3639a5ac3ba31c9bfbb</div>
+    </div>
+    <div class="panel" style="border-color:var(--accent3)22;">
+      <div class="panel-label" style="color:var(--accent3)">RC4-Style PRNG</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">Key-Scheduling Algorithm + PRNG XOR stream.</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent3);word-break:break-all;">d42b203340007487b02af8</div>
+    </div>
+    <div class="panel" style="border-color:var(--accent4)22;">
+      <div class="panel-label" style="color:var(--accent4)">CHAMP Hybrid Stack</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">Vigenère → Polybius → XOR. Full 3-layer product cipher.</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:var(--accent4);word-break:break-all;">767d727f647279727c61637c727f657679757c6476</div>
+    </div></div>
+</div>
+
+<!-- ============ ABOUT ============ -->
+<div class="tab-pane" id="tab-about">
+  <div class="panel" style="margin-bottom:1.2rem;">
+    <div class="panel-label">CHAMP Encryption Pipeline</div>
+    <div class="pipeline">
+      <div class="pipe-box"><h3 class="v">Plaintext</h3><p>Natural language input to be protected</p></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box"><h3 class="v">Vigenère</h3><p>Polyalphabetic substitution masks single-letter frequencies</p></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box"><h3 class="p">Polybius</h3><p>Fractionates each letter into a 2-digit coordinate pair</p></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box"><h3 class="d">Ciphertext</h3><p>Numeric output with diffused statistics</p></div>
+    </div>
+  </div>
+  <div class="info-grid">
+    <div class="info-card"><h4>Low Level</h4><p>Caesar, ROT13, Atbash, Vigenère, Polybius — classical paper-and-pencil ciphers. Educational value; easily broken by modern cryptanalysis.</p></div>
+    <div class="info-card"><h4>Mid Level</h4><p>Rail Fence, Columnar Transposition, Playfair, ADFGVX — used in WWI/WWII-era military communications. More resistant to frequency attacks.</p></div>
+    <div class="info-card"><h4>High Level</h4><p>XOR stream cipher, simplified Feistel, RC4-style PRNG — modern algorithmic primitives. Computationally harder to break without the key.</p></div>
+    <div class="info-card"><h4>Ultra — CHAMP</h4><p>Vigenère → Polybius → XOR layered stack. Applies confusion (Vigenère), diffusion (Polybius), and stream randomisation (XOR). Product cipher per Shannon.</p></div>
+    <div class="info-card"><h4>Index of Coincidence</h4><p>English IC ≈ 0.0667. Random IC ≈ 0.0385. The Frequency Analysis tab measures how well the cipher masks language patterns.</p></div>
+    <div class="info-card"><h4>Shannon's Theory</h4><p>Confusion obscures the key-ciphertext relationship. Diffusion spreads plaintext statistics. CHAMP applies both through layering.</p></div>
+  </div>
+  <div class="panel" style="margin-top:1.2rem;">
+    <div class="panel-label">Project Timeline</div>
+    <div class="timeline">
+      <div class="tl-row"><span class="tl-bar done"></span><span class="tl-phase">Phase 1</span><span class="tl-week">Week 1</span><span class="tl-desc">Literature review and mathematical modelling of the hybrid algorithm.</span></div>
+      <div class="tl-row"><span class="tl-bar done"></span><span class="tl-phase">Phase 2</span><span class="tl-week">Week 2</span><span class="tl-desc">Implementation of Vigenère and Polybius modules in Python / C++.</span></div>
+      <div class="tl-row"><span class="tl-bar active"></span><span class="tl-phase">Phase 3</span><span class="tl-week">Week 3</span><span class="tl-desc">Integration of all modules and development of this User Interface.</span></div>
+      <div class="tl-row"><span class="tl-bar todo"></span><span class="tl-phase">Phase 4</span><span class="tl-week">Week 4</span><span class="tl-desc">Security testing (IC measurement, Kasiski) and final documentation.</span></div>
+    </div>
+  </div>
+  <div style="margin-top:1.2rem;text-align:center;">
+    <button class="btn btn-download" onclick="downloadSelf()" style="font-size:.85rem;padding:.8rem 2rem;">⬇ DOWNLOAD CHAMP.HTML</button>
+  </div>
+</div>
+
+</div><!-- /wrapper -->
+<div class="notif" id="notif">Done</div>
+
+<script>
+// =============================================
+// ALGORITHM REGISTRY
+// =============================================
+const ALGOS = [
+  // LOW LEVEL
+  {id:'caesar',    level:'low',  name:'Caesar Cipher',     desc:'Shift each letter by fixed offset N (default 3)',
+   keys:[{id:'shift',label:'Shift (0–25)',type:'number',default:'3'}]},
+  {id:'rot13',     level:'low',  name:'ROT-13',             desc:'Fixed Caesar shift of 13. Self-inverse.',keys:[]},
+  {id:'atbash',    level:'low',  name:'Atbash Cipher',      desc:'A↔Z, B↔Y mirror substitution.',keys:[]},
+  {id:'vigenere',  level:'low',  name:'Vigenère Cipher',    desc:'Polyalphabetic keyword substitution.',
+   keys:[{id:'vkey',label:'Vigenère Key',type:'text',default:'SECRET'}]},
+  {id:'polybius',  level:'low',  name:'Polybius Square',    desc:'Each letter → 2-digit row/col coordinate.',
+   keys:[{id:'pkey',label:'Polybius Keyword (optional)',type:'text',default:''}]},
+
+  // MID LEVEL
+  {id:'railfence', level:'mid',  name:'Rail Fence',         desc:'Zigzag transposition across N rails.',
+   keys:[{id:'rails',label:'Number of Rails',type:'number',default:'3'}]},
+  {id:'columnar',  level:'mid',  name:'Columnar Transposition', desc:'Reorder columns by alphabetic key order.',
+   keys:[{id:'ckey',label:'Column Key',type:'text',default:'ZEBRAS'}]},
+  {id:'playfair',  level:'mid',  name:'Playfair Cipher',    desc:'Digraph substitution using a 5×5 key square.',
+   keys:[{id:'pfkey',label:'Playfair Key',type:'text',default:'MONARCHY'}]},
+
+  // HIGH LEVEL
+  {id:'xor',       level:'high', name:'XOR Stream Cipher',  desc:'XOR each byte with a PRNG keystream seeded by key.',
+   keys:[{id:'xkey',label:'XOR Key (any string)',type:'text',default:'CHAMP2024'}]},
+  {id:'feistel',   level:'high', name:'Feistel Network',    desc:'4-round simplified Feistel block cipher.',
+   keys:[{id:'fkey',label:'Feistel Key',type:'text',default:'FEISTEL'}]},
+  {id:'rc4like',   level:'high', name:'RC4-Style PRNG',     desc:'Key-Scheduling Algorithm + PRNG XOR stream.',
+   keys:[{id:'rkey',label:'RC4 Key',type:'text',default:'SECRETKEY'}]},
+
+  // ULTRA
+  {id:'champ',     level:'ultra',name:'CHAMP Hybrid Stack', desc:'Vigenère → Polybius → XOR. Full 3-layer product cipher.',
+   keys:[
+     {id:'cvkey',label:'Vigenère Key',type:'text',default:'SECRET'},
+     {id:'cpkey',label:'Polybius Keyword (optional)',type:'text',default:''},
+     {id:'cxkey',label:'XOR Key',type:'text',default:'CHAMP'}
+   ]},
+];
+
+// =============================================
+// CRYPTO IMPLEMENTATIONS
+// =============================================
+
+// ---- Caesar ----
+function caesarEnc(text, shift){
+  shift = ((parseInt(shift)||0)%26+26)%26;
+  return text.toUpperCase().replace(/[A-Z]/g,c=>String.fromCharCode((c.charCodeAt(0)-65+shift)%26+65));
+}
+function caesarDec(text, shift){return caesarEnc(text, 26-(((parseInt(shift)||0)%26+26)%26));}
+
+// ---- ROT13 ----
+function rot13(text){return caesarEnc(text,13);}
+
+// ---- Atbash ----
+function atbash(text){return text.toUpperCase().replace(/[A-Z]/g,c=>String.fromCharCode(90-(c.charCodeAt(0)-65)));}
+
+// ---- Vigenère ----
+function vigEnc(text, key){
+  key=(key||'A').toUpperCase().replace(/[^A-Z]/g,'')||'A';
+  let out='',ki=0;
+  for(const ch of text.toUpperCase()){
+    if(ch>='A'&&ch<='Z'){out+=String.fromCharCode((ch.charCodeAt(0)-65+key.charCodeAt(ki%key.length)-65)%26+65);ki++;}
+    else out+=ch;
+  }
+  return out;
+}
+function vigDec(text, key){
+  key=(key||'A').toUpperCase().replace(/[^A-Z]/g,'')||'A';
+  let out='',ki=0;
+  for(const ch of text.toUpperCase()){
+    if(ch>='A'&&ch<='Z'){out+=String.fromCharCode((ch.charCodeAt(0)-65-key.charCodeAt(ki%key.length)+65+26)%26+65);ki++;}
+    else out+=ch;
+  }
+  return out;
+}
+
+// ---- Polybius ----
+function buildSq(kw){
+  kw=(kw||'').toUpperCase().replace(/[^A-Z]/g,'');
+  const seen={},sq=[];
+  for(const c of kw+'ABCDEFGHIKLMNOPQRSTUVWXYZ'){
+    const ch=c==='J'?'I':c;
+    if(!seen[ch]){seen[ch]=true;sq.push(ch);}
+    if(sq.length===25)break;
+  }
+  return sq;
+}
+function polyEnc(text, sq){
+  let out='';
+  for(const ch of text.toUpperCase()){
+    const c=ch==='J'?'I':ch;
+    if(c>='A'&&c<='Z'&&c!=='J'){const i=sq.indexOf(c);if(i>=0)out+=(Math.floor(i/5)+1)+''+(i%5+1);}
+    else if(c===' ')out+=' ';
+  }
+  return out;
+}
+function polyDec(text, sq){
+  return text.split(' ').map(tok=>{
+    const d=tok.replace(/[^1-5]/g,'');let w='';
+    for(let i=0;i+1<d.length;i+=2){const r=+d[i]-1,c=+d[i+1]-1;w+=(r>=0&&r<5&&c>=0&&c<5)?sq[r*5+c]:'?';}
+    return w;
+  }).join(' ');
+}
+
+// ---- Rail Fence ----
+function railEnc(text, rails){
+  rails=Math.max(2,parseInt(rails)||3);
+  const arr=Array.from({length:rails},()=>[]);
+  let r=0,dir=1;
+  for(const ch of text){arr[r].push(ch);if(r===0)dir=1;else if(r===rails-1)dir=-1;r+=dir;}
+  return arr.map(a=>a.join('')).join('');
+}
+function railDec(text, rails){
+  rails=Math.max(2,parseInt(rails)||3);
+  const n=text.length;
+  const mark=new Array(n);
+  let r=0,dir=1;
+  for(let i=0;i<n;i++){mark[i]=r;if(r===0)dir=1;else if(r===rails-1)dir=-1;r+=dir;}
+  const counts=Array(rails).fill(0);
+  for(const m of mark)counts[m]++;
+  const rows=[];let p=0;
+  for(let i=0;i<rails;i++){rows.push(text.slice(p,p+counts[i]));p+=counts[i];}
+  const ptrs=Array(rails).fill(0);
+  let out='';
+  for(let i=0;i<n;i++){out+=rows[mark[i]][ptrs[mark[i]]++];}
+  return out;
+}
+
+// ---- Columnar Transposition ----
+function colEnc(text, key){
+  key=(key||'KEY').toUpperCase().replace(/[^A-Z]/g,'')||'KEY';
+  const order=[...key].map((c,i)=>({c,i})).sort((a,b)=>a.c.localeCompare(b.c)).map(x=>x.i);
+  const cols=key.length,rows=Math.ceil(text.length/cols);
+  const grid=Array.from({length:rows},(_,r)=>text.slice(r*cols,(r+1)*cols).padEnd(cols,'X').split(''));
+  return order.map(c=>grid.map(row=>row[c]).join('')).join('');
+}
+function colDec(text, key){
+  key=(key||'KEY').toUpperCase().replace(/[^A-Z]/g,'')||'KEY';
+  const cols=key.length,rows=Math.ceil(text.length/cols);
+  const order=[...key].map((c,i)=>({c,i})).sort((a,b)=>a.c.localeCompare(b.c)).map(x=>x.i);
+  const colLens=Array(cols).fill(rows);
+  const grid=Array.from({length:rows},()=>Array(cols));
+  let p=0;
+  order.forEach(c=>{for(let r=0;r<colLens[c];r++)grid[r][c]=text[p++]||'X';});
+  return grid.map(row=>row.join('')).join('');
+}
+
+// ---- Playfair ----
+function buildPlayfair(key){
+  key=(key||'').toUpperCase().replace(/[^A-Z]/g,'').replace(/J/g,'I');
+  const seen={},sq=[];
+  for(const c of key+'ABCDEFGHIKLMNOPQRSTUVWXYZ'){
+    if(!seen[c]){seen[c]=true;sq.push(c);}
+    if(sq.length===25)break;
+  }
+  return sq;
+}
+function pfPos(sq,ch){const i=sq.indexOf(ch);return[Math.floor(i/5),i%5];}
+function playfairEnc(text, key){
+  const sq=buildPlayfair(key);
+  const t=text.toUpperCase().replace(/[^A-Z]/g,'').replace(/J/g,'I');
+  let pairs=[];let i=0;
+  while(i<t.length){
+    const a=t[i];const b=t[i+1]||'X';
+    if(a===b){pairs.push([a,'X']);i++;}else{pairs.push([a,b]);i+=2;}
+  }
+  if(pairs.length&&pairs[pairs.length-1][1]==='X'&&pairs[pairs.length-1][0]==='X')pairs[pairs.length-1][1]='Z';
+  return pairs.map(([a,b])=>{
+    const [ar,ac]=pfPos(sq,a),[br,bc]=pfPos(sq,b);
+    if(ar===br)return sq[ar*5+(ac+1)%5]+sq[br*5+(bc+1)%5];
+    if(ac===bc)return sq[((ar+1)%5)*5+ac]+sq[((br+1)%5)*5+bc];
+    return sq[ar*5+bc]+sq[br*5+ac];
+  }).join('');
+}
+function playfairDec(text, key){
+  const sq=buildPlayfair(key);
+  const t=text.toUpperCase().replace(/[^A-Z]/g,'');
+  let pairs=[];
+  for(let i=0;i<t.length;i+=2)pairs.push([t[i],t[i+1]||'X']);
+  return pairs.map(([a,b])=>{
+    const [ar,ac]=pfPos(sq,a),[br,bc]=pfPos(sq,b);
+    if(ar===br)return sq[ar*5+(ac+24)%5]+sq[br*5+(bc+24)%5];
+    if(ac===bc)return sq[((ar+4)%5)*5+ac]+sq[((br+4)%5)*5+bc];
+    return sq[ar*5+bc]+sq[br*5+ac];
+  }).join('');
+}
+
+// ---- XOR Stream ----
+function xorCipher(text, key){
+  const bytes=[...text].map(c=>c.charCodeAt(0));
+  const kbytes=[...key].map(c=>c.charCodeAt(0));
+  const out=bytes.map((b,i)=>b^kbytes[i%kbytes.length]);
+  return out.map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function xorDecipher(hex, key){
+  const bytes=hex.match(/.{1,2}/g)||[];
+  const kbytes=[...key].map(c=>c.charCodeAt(0));
+  return bytes.map((h,i)=>String.fromCharCode(parseInt(h,16)^kbytes[i%kbytes.length])).join('');
+}
+
+// ---- Feistel ----
+function feistelF(half, roundKey){
+  return ((half*roundKey+0x1234567)^(half<<3)^(roundKey>>1))&0xFFFF;
+}
+function feistelEnc(text, key){
+  const kHash=[...key].reduce((h,c)=>((h<<5)-h+c.charCodeAt(0))&0xFFFFFFFF,0);
+  const rks=[kHash^0xDEAD,kHash^0xBEEF,kHash^0xCAFE,kHash^0xBABE];
+  let out='';
+  for(let i=0;i<text.length;i+=2){
+    let L=text.charCodeAt(i),R=(text.charCodeAt(i+1)||32);
+    for(let r=0;r<4;r++){const t=R;R=(L^feistelF(R,rks[r]))&0xFF;L=t;}
+    out+=L.toString(16).padStart(2,'0')+R.toString(16).padStart(2,'0');
+  }
+  return out;
+}
+function feistelDec(hex, key){
+  const kHash=[...key].reduce((h,c)=>((h<<5)-h+c.charCodeAt(0))&0xFFFFFFFF,0);
+  const rks=[kHash^0xDEAD,kHash^0xBEEF,kHash^0xCAFE,kHash^0xBABE];
+  let out='';
+  const bytes=hex.match(/.{4}/g)||[];
+  for(const pair of bytes){
+    let L=parseInt(pair.slice(0,2),16),R=parseInt(pair.slice(2,4),16);
+    for(let r=3;r>=0;r--){const t=L;L=(R^feistelF(L,rks[r]))&0xFF;R=t;}
+    out+=String.fromCharCode(L,R);
+  }
+  return out.replace(/\0/g,'');
+}
+
+// ---- RC4-style ----
+function rc4KSA(key){
+  const k=[...key].map(c=>c.charCodeAt(0));
+  const S=Array.from({length:256},(_,i)=>i);
+  let j=0;
+  for(let i=0;i<256;i++){j=(j+S[i]+k[i%k.length])&255;[S[i],S[j]]=[S[j],S[i]];}
+  return S;
+}
+function rc4Stream(S, len){
+  let i=0,j=0,out=[];S=[...S];
+  for(let n=0;n<len;n++){i=(i+1)&255;j=(j+S[i])&255;[S[i],S[j]]=[S[j],S[i]];out.push(S[(S[i]+S[j])&255]);}
+  return out;
+}
+function rc4Enc(text, key){
+  const S=rc4KSA(key);const ks=rc4Stream(S,text.length);
+  return [...text].map((c,i)=>(c.charCodeAt(0)^ks[i]).toString(16).padStart(2,'0')).join('');
+}
+function rc4Dec(hex, key){
+  const bytes=hex.match(/.{1,2}/g)||[];
+  const S=rc4KSA(key);const ks=rc4Stream(S,bytes.length);
+  return bytes.map((h,i)=>String.fromCharCode(parseInt(h,16)^ks[i])).join('');
+}
+
+// ---- CHAMP Hybrid ----
+function champEnc(text, vkey, pkey, xkey){
+  const sq=buildSq(pkey);
+  const s1=vigEnc(text,vkey);
+  const s2=polyEnc(s1,sq);
+  const s3=xorCipher(s2,xkey||'CHAMP');
+  return {s1,s2,s3};
+}
+function champDec(hex, vkey, pkey, xkey){
+  const sq=buildSq(pkey);
+  const s1=xorDecipher(hex,xkey||'CHAMP');
+  const s2=polyDec(s1,sq);
+  const s3=vigDec(s2,vkey);
+  return {s1,s2,s3};
+}
+
+// =============================================
+// DISPATCH TABLE
+// =============================================
+const ENC={
+  caesar:(t,k)=>caesarEnc(t,k.shift),
+  rot13:(t)=>rot13(t),
+  atbash:(t)=>atbash(t),
+  vigenere:(t,k)=>vigEnc(t,k.vkey),
+  polybius:(t,k)=>{const sq=buildSq(k.pkey);return polyEnc(t,sq);},
+  railfence:(t,k)=>railEnc(t,k.rails),
+  columnar:(t,k)=>colEnc(t,k.ckey),
+  playfair:(t,k)=>playfairEnc(t,k.pfkey),
+  xor:(t,k)=>xorCipher(t,k.xkey),
+  feistel:(t,k)=>feistelEnc(t,k.fkey),
+  rc4like:(t,k)=>rc4Enc(t,k.rkey),
+  champ:(t,k)=>champEnc(t,k.cvkey,k.cpkey,k.cxkey).s3,
+};
+const DEC={
+  caesar:(t,k)=>caesarDec(t,k.shift),
+  rot13:(t)=>rot13(t),
+  atbash:(t)=>atbash(t),
+  vigenere:(t,k)=>vigDec(t,k.vkey),
+  polybius:(t,k)=>{const sq=buildSq(k.pkey);return polyDec(t,sq);},
+  railfence:(t,k)=>railDec(t,k.rails),
+  columnar:(t,k)=>colDec(t,k.ckey),
+  playfair:(t,k)=>playfairDec(t,k.pfkey),
+  xor:(t,k)=>xorDecipher(t,k.xkey),
+  feistel:(t,k)=>feistelDec(t,k.fkey),
+  rc4like:(t,k)=>rc4Dec(t,k.rkey),
+  champ:(t,k)=>{const r=champDec(t,k.cvkey,k.cpkey,k.cxkey);return r.s3;},
+};
+const TRACE_ENC={
+  champ:(t,k)=>{
+    const r=champEnc(t,k.cvkey,k.cpkey,k.cxkey);
+    return [
+      ['Plaintext',t.toUpperCase()],
+      ['After Vigenère (key: '+(k.cvkey||'A')+')',r.s1],
+      ['After Polybius Fractionation',r.s2],
+      ['After XOR Stream (key: '+(k.cxkey||'CHAMP')+')',r.s3],
+    ];
+  },
+  vigenere:(t,k)=>[['Plaintext',t.toUpperCase()],['Vigenère Key',k.vkey||'A'],['Ciphertext',vigEnc(t,k.vkey)]],
+  polybius:(t,k)=>{const sq=buildSq(k.pkey);return[['Plaintext',t.toUpperCase()],['Polybius Square',sq.join(' ')],['Coordinate Output',polyEnc(t,sq)]];},
+  xor:(t,k)=>[['Plaintext',t],['Key',k.xkey],['XOR hex output',xorCipher(t,k.xkey)]],
+  feistel:(t,k)=>[['Plaintext',t],['Key',k.fkey],['Feistel output (hex)',feistelEnc(t,k.fkey)]],
+  rc4like:(t,k)=>[['Plaintext',t],['Key',k.rkey],['RC4 hex output',rc4Enc(t,k.rkey)]],
+};
+const TRACE_DEC={
+  champ:(t,k)=>{
+    const r=champDec(t,k.cvkey,k.cpkey,k.cxkey);
+    return [
+      ['Ciphertext (hex)',t],
+      ['After XOR Reverse',r.s1],
+      ['After Polybius Reverse',r.s2],
+      ['After Vigenère Decrypt',r.s3],
+    ];
+  },
+};
+
+// =============================================
+// STATE
+// =============================================
+let selectedEncAlgo='champ';
+let selectedDecAlgo='champ';
+let currentSq=buildSq('');
+
+// =============================================
+// RENDER ALGO SELECTOR
+// =============================================
+function renderAlgoGrids(mode){
+  const levels=['low','mid','high','ultra'];
+  levels.forEach(lvl=>{
+    const gridId=(mode==='enc'?'':'d')+'algo-grid-'+lvl;
+    const el=document.getElementById(gridId);
+    if(!el)return;
+    el.innerHTML=ALGOS.filter(a=>a.level===lvl).map(a=>{
+      const sel=(mode==='enc'?selectedEncAlgo:selectedDecAlgo)===a.id;
+      const badge=`<span class="level-badge level-${lvl}">${lvl}</span>`;
+      return `<div class="algo-card${sel?' selected':''}" onclick="selectAlgo('${a.id}','${mode}')">
+        <div class="algo-card-badge">${badge}</div>
+        <div class="algo-card-name">${a.name}</div>
+        <div class="algo-card-desc">${a.desc}</div>
+      </div>`;
+    }).join('');
+  });
+}
+
+function selectAlgo(id, mode){
+  if(mode==='enc')selectedEncAlgo=id;
+  else selectedDecAlgo=id;
+  renderAlgoGrids(mode);
+  renderKeyFields(mode);
+}
+
+function renderKeyFields(mode){
+  const algoId=mode==='enc'?selectedEncAlgo:selectedDecAlgo;
+  const algo=ALGOS.find(a=>a.id===algoId);
+  const container=document.getElementById(mode==='enc'?'enc-key-fields':'dec-key-fields');
+  if(!algo||!container)return;
+  container.innerHTML=algo.keys.map(k=>`
+    <div class="field">
+      <label>${k.label}</label>
+      <input type="${k.type}" id="kf_${mode}_${k.id}" value="${k.default}" placeholder="${k.label}"/>
+    </div>`).join('');
+}
+
+function getKeyValues(mode){
+  const algoId=mode==='enc'?selectedEncAlgo:selectedDecAlgo;
+  const algo=ALGOS.find(a=>a.id===algoId);
+  if(!algo)return{};
+  const out={};
+  algo.keys.forEach(k=>{
+    const el=document.getElementById(`kf_${mode}_${k.id}`);
+    out[k.id]=el?el.value:k.default;
+  });
+  return out;
+}
+
+// =============================================
+// ENCRYPT / DECRYPT
+// =============================================
+function runEncrypt(){
+  const text=document.getElementById('enc-plain').value;
+  const algoId=selectedEncAlgo;
+  const keys=getKeyValues('enc');
+  try{
+    const result=ENC[algoId](text,keys);
+    document.getElementById('enc-out-text').textContent=result||'(empty)';
+
+    const traceData=TRACE_ENC[algoId]?TRACE_ENC[algoId](text,keys):null;
+    const traceEl=document.getElementById('enc-trace');
+    const traceRows=document.getElementById('enc-trace-rows');
+    if(traceData){
+      traceRows.innerHTML=traceData.map(([lbl,val],i)=>`
+        <div class="trace-row">
+          <span class="trace-num">0${i+1}</span>
+          <span class="trace-label">${lbl}</span>
+          <span class="trace-val">${val}</span>
+        </div>`).join('');
+      traceEl.style.display='block';
+    } else {
+      traceRows.innerHTML=`<div class="trace-row"><span class="trace-num">01</span><span class="trace-label">Input</span><span class="trace-val">${text}</span></div>
+      <div class="trace-row"><span class="trace-num">02</span><span class="trace-label">Output</span><span class="trace-val">${result}</span></div>`;
+      traceEl.style.display='block';
+    }
+  }catch(e){document.getElementById('enc-out-text').textContent='Error: '+e.message;}
+}
+
+function runDecrypt(){
+  const text=document.getElementById('dec-cipher').value;
+  const algoId=selectedDecAlgo;
+  const keys=getKeyValues('dec');
+  try{
+    const result=DEC[algoId](text,keys);
+    document.getElementById('dec-out-text').textContent=result||'(empty)';
+
+    const traceData=TRACE_DEC[algoId]?TRACE_DEC[algoId](text,keys):null;
+    const traceEl=document.getElementById('dec-trace');
+    const traceRows=document.getElementById('dec-trace-rows');
+    if(traceData){
+      traceRows.innerHTML=traceData.map(([lbl,val],i)=>`
+        <div class="trace-row">
+          <span class="trace-num">0${i+1}</span>
+          <span class="trace-label">${lbl}</span>
+          <span class="trace-val">${val}</span>
+        </div>`).join('');
+      traceEl.style.display='block';
+    } else {
+      traceRows.innerHTML=`<div class="trace-row"><span class="trace-num">01</span><span class="trace-label">Cipher Input</span><span class="trace-val">${text}</span></div>
+      <div class="trace-row"><span class="trace-num">02</span><span class="trace-label">Recovered</span><span class="trace-val">${result}</span></div>`;
+      traceEl.style.display='block';
+    }
+  }catch(e){document.getElementById('dec-out-text').textContent='Error: '+e.message;}
+}
+
+function clearEnc(){
+  document.getElementById('enc-plain').value='';
+  document.getElementById('enc-out-text').textContent='—';
+  document.getElementById('enc-trace').style.display='none';
+}
+function clearDec(){
+  document.getElementById('dec-cipher').value='';
+  document.getElementById('dec-out-text').textContent='—';
+  document.getElementById('dec-trace').style.display='none';
+}
+
+// =============================================
+// POLYBIUS MATRIX TAB
+// =============================================
+function renderMatrix(){
+  const key=document.getElementById('matrix-key')?document.getElementById('matrix-key').value:'';
+  currentSq=buildSq(key);
+  const hiCh=(document.getElementById('lookup-char')?document.getElementById('lookup-char').value.toUpperCase():'');
+  let html='<tr><th></th>';
+  for(let c=1;c<=5;c++)html+=`<th>${c}</th>`;
+  html+='</tr>';
+  for(let r=0;r<5;r++){
+    html+=`<tr><th>${r+1}</th>`;
+    for(let c=0;c<5;c++){
+      const ch=currentSq[r*5+c];
+      const lit=hiCh&&(ch===hiCh||(hiCh==='J'&&ch==='I'));
+      html+=`<td class="${lit?'lit':''}" onclick="showCoord('${ch}',${r+1},${c+1})">${ch}${ch==='I'?'/J':''}</td>`;
+    }
+    html+='</tr>';
+  }
+  document.getElementById('poly-table').innerHTML=html;
+}
+function showCoord(ch,r,c){document.getElementById('coord-info').textContent=`'${ch}' → Row ${r}, Col ${c} → Coordinate: ${r}${c}`;}
+function lookupChar(){
+  renderMatrix();
+  const ch=(document.getElementById('lookup-char').value||'').toUpperCase().replace('J','I');
+  if(!ch||!/[A-Z]/.test(ch)){document.getElementById('lookup-result').textContent='—';return;}
+  const idx=currentSq.indexOf(ch);
+  if(idx<0){document.getElementById('lookup-result').textContent='Not found';return;}
+  const r=Math.floor(idx/5)+1,c=idx%5+1;
+  document.getElementById('lookup-result').textContent=`'${ch}' → coordinate ${r}${c}  (row ${r}, col ${c})`;
+}
+function lookupCoord(){
+  const v=(document.getElementById('lookup-coord').value||'').replace(/[^1-5]/g,'');
+  if(v.length<2){document.getElementById('lookup-result').textContent='—';return;}
+  const r=+v[0]-1,c=+v[1]-1;
+  if(r<0||r>4||c<0||c>4){document.getElementById('lookup-result').textContent='Invalid';return;}
+  document.getElementById('lookup-result').textContent=`Coordinate ${v[0]}${v[1]} → '${currentSq[r*5+c]}'`;
+}
+function demoEncode(){
+  const word=document.getElementById('demo-word').value;
+  if(!word){document.getElementById('demo-out-text').textContent='—';return;}
+  const sq=buildSq(document.getElementById('matrix-key').value);
+  document.getElementById('demo-out-text').textContent=polyEnc(word,sq)||'—';
+}
+
+// =============================================
+// FREQ ANALYSIS
+// =============================================
+function calcIC(text){
+  const l=text.toUpperCase().replace(/[^A-Z]/g,'');
+  const n=l.length;if(n<2)return 0;
+  const f={};for(const c of l)f[c]=(f[c]||0)+1;
+  return Object.values(f).reduce((s,v)=>s+v*(v-1),0)/(n*(n-1));
+}
+function runAnalysis(){
+  const raw=document.getElementById('analysis-input').value;
+  if(!raw.trim()){document.getElementById('freq-output').innerHTML='';return;}
+  const plain=raw.toUpperCase().replace(/[^A-Z ]/g,'');
+  const letters=plain.replace(/ /g,'');
+  const ic=calcIC(letters);
+  const freq={};for(const c of letters)freq[c]=(freq[c]||0)+1;
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,16);
+  const total=letters.length,maxF=sorted[0]?.[1]||1;
+  const icColor=ic>0.055?'var(--accent3)':ic>0.044?'var(--accent)':'var(--accent2)';
+  const bars=sorted.map(([ch,cnt])=>{
+    const pct=(cnt/total*100).toFixed(1),w=Math.round(cnt/maxF*100);
+    return `<div class="freq-bar-row"><span class="freq-chr">${ch}</span><div class="freq-track"><div class="freq-fill c1" style="width:${w}%"></div></div><span class="freq-pct">${pct}%</span></div>`;
+  }).join('');
+  document.getElementById('freq-output').innerHTML=`
+    <div><div class="panel"><div class="panel-label">Letter Frequencies — ${total} chars</div>${bars}</div></div>
+    <div>
+      <div class="ic-card">
+        <div class="ic-val" style="color:${icColor}">${ic.toFixed(4)}</div>
+        <div class="ic-label">Index of Coincidence</div>
+        <div class="ic-ref">English ≈ 0.0667</div>
+        <div class="ic-ref">Random ≈ 0.0385</div>
+        <div class="ic-ref" style="margin-top:.5rem;color:${icColor}">${ic>0.055?'⚠ Natural language pattern':ic>0.044?'~ Moderate entropy':'✓ High entropy — well encrypted'}</div>
+      </div>
+      <div class="info-card" style="margin-top:1rem;">
+        <h4>What this means</h4>
+        <p>IC near 0.0667 = readable by frequency analysis.<br><br>IC near 0.0385 = language statistics are masked — the CHAMP hybrid stack achieves this through Vigenère + Polybius + XOR layering.</p>
+      </div>
+    </div>`;
+}
+function loadExample(){
+  const r=champEnc('THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG','SECRET','','CHAMP');
+  document.getElementById('analysis-input').value=r.s3;
+  runAnalysis();
+}
+function clearAnalysis(){document.getElementById('analysis-input').value='';document.getElementById('freq-output').innerHTML='';}
+
+// =============================================
+// COMPARE TAB
+// =============================================
+function runCompare(){
+  const text=document.getElementById('cmp-plain').value||'HELLO WORLD';
+  const key=document.getElementById('cmp-key').value||'SECRET';
+  const results=ALGOS.map(a=>{
+    const keys={};
+    a.keys.forEach(k=>keys[k.id]=k.default||key);
+    // override first text-type key with user key
+    const firstTxt=a.keys.find(k=>k.type==='text');
+    if(firstTxt)keys[firstTxt.id]=key;
+    let out='';
+    try{out=ENC[a.id](text,keys);}catch(e){out='[error]';}
+    return {a,out};
+  });
+  const levelColor={low:'var(--accent2)',mid:'var(--accent)',high:'var(--accent3)',ultra:'var(--accent4)'};
+  document.getElementById('cmp-output').innerHTML=results.map(({a,out})=>`
+    <div class="panel" style="border-color:${levelColor[a.level]}22;">
+      <div class="panel-label" style="color:${levelColor[a.level]}">${a.name}</div>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:.5rem;">${a.desc}</div>
+      <div class="output-block" style="font-size:.72rem;min-height:44px;color:${levelColor[a.level]};word-break:break-all;">${out}</div>
+    </div>`).join('');
+}
+
+// =============================================
+// TABS
+// =============================================
+function switchTab(name){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  const idx=['encrypt','decrypt','matrix','analysis','compare','about'].indexOf(name);
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+  if(name==='matrix'){currentSq=buildSq('');renderMatrix();}
+  if(name==='compare')runCompare();
+}
+
+// =============================================
+// UTILS
+// =============================================
+function copyEl(id){
+  const text=document.getElementById(id)?.textContent||'';
+  navigator.clipboard.writeText(text).then(()=>showNotif('Copied to clipboard ✓'));
+}
+function showNotif(msg){
+  const el=document.getElementById('notif');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2200);
+}
+function updateClock(){
+  document.getElementById('clock').textContent=new Date().toTimeString().slice(0,8);
+}
+
+// =============================================
+// DOWNLOAD
+// =============================================
+function downloadSelf(){
+  const html=document.documentElement.outerHTML;
+  const blob=new Blob([html],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='CHAMP_Cryptographic_System.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showNotif('Downloading CHAMP_Cryptographic_System.html ⬇');
+}
+
+// =============================================
+// INIT
+// =============================================
+renderAlgoGrids('enc');
+renderAlgoGrids('dec');
+renderKeyFields('enc');
+renderKeyFields('dec');
+currentSq=buildSq('');
+setInterval(updateClock,1000);
+updateClock();
+</script>
+
+
+</body></html>
